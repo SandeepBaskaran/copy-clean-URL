@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clean URL Copier</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Toggle Switches -->
+        <div class="toggle-section">
+            <div class="toggle-item">
+                <span class="toggle-text">Clean URL</span>
+                <label class="toggle-label">
+                    <input type="checkbox" id="cleanUrlToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Apply scope radios -->
+        <div class="radio-section">
+            <div class="radio-label">Apply for</div>
+            <label class="radio-item"><input type="radio" name="applyScope" value="thisTab" checked> this tab</label>
+            <label class="radio-item"><input type="radio" name="applyScope" value="thisGroup"> all tabs in this group</label>
+            <label class="radio-item"><input type="radio" name="applyScope" value="thisWindow"> all tabs in this window</label>
+            <label class="radio-item"><input type="radio" name="applyScope" value="allWindows"> all tabs in all windows</label>
+        </div>
+
+        <!-- Copy Button -->
+        <button id="activateButton" class="activate-button">
+            Copy Clean Link
+        </button>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast hidden">
+            <span id="toastMessage"></span>
+        </div>
+
+        <!-- Footer Attribution -->
+        <div class="footer">
+            <a href="https://www.linkedin.com/in/sandeepbaskaran" target="_blank" class="attribution">
+                Vibe coded by Sandeep Baskaran
+            </a>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

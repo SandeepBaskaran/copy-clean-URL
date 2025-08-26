@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Copy Clean URL",
+  "version": "1.0.0",
+  "description": "Clean URLs and copy them to clipboard with ease",
+  "permissions": [
+    "activeTab",
+    "clipboardWrite",
+    "storage",
+    "scripting",
+    "tabs",
+    "tabGroups"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Copy Clean URL"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "copy_clean_link": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
+      },
+      "description": "Copy Clean Link"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

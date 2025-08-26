@@ -1,0 +1,27 @@
+{
+  "name": "copy-clean-url",
+  "version": "1.0.0",
+  "description": "A Chrome extension that cleans URLs by stripping query parameters and copies them to the clipboard",
+  "main": "manifest.json",
+  "scripts": {
+    "build": "echo 'No build process required for Chrome extension'",
+    "test": "echo 'No tests specified'",
+    "lint": "echo 'No linter configured'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "url-cleaner",
+    "clipboard",
+    "manifest-v3"
+  ],
+  "author": "Sandeep Baskaran",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/copy-clean-url.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/copy-clean-url/issues"
+  },
+  "homepage": "https://github.com/yourusername/copy-clean-url#readme"
+}
