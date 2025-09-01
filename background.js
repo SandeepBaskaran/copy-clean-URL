@@ -40,12 +40,16 @@ async function handleCopyRequest() {
         return shouldClean ? cleanUrl(url) : url;
     }).filter((u) => !!u);
 
-    const textBlob = urls.join('\n');
-    if (textBlob.length > 0) {
-        await copyToClipboard(textBlob);
-    }
+            const textBlob = urls.join('\n');
+        if (textBlob.length > 0) {
+            const copyResult = await copyToClipboard(textBlob);
+            if (copyResult && copyResult.error) {
+                throw new Error(copyResult.error);
+            }
+        }
     } catch (error) {
         console.error('Error in handleCopyRequest:', error);
+        throw error;
     }
 }
 
@@ -100,6 +104,24 @@ async function copyToClipboard(text) {
         // In MV3 service workers, use injection approach
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab) {
+            // Check if the tab URL is restricted (can't be scripted)
+            if (tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:'))) {
+                // For restricted pages, try to use clipboard API directly
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(text);
+                        return;
+                    }
+                } catch (clipboardError) {
+                    console.log('Clipboard API not available on restricted page');
+                }
+                
+                // If clipboard API fails, show user-friendly error
+                console.log('Cannot copy from restricted page. Please try on a regular webpage.');
+                return { error: 'Cannot copy from this page. Please try on a regular webpage.' };
+            }
+            
+            // For regular pages, use script injection
             await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
                 func: (textToCopy) => {

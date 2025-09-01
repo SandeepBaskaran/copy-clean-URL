@@ -53,6 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const res = await chrome.runtime.sendMessage({ type: 'copy_clean_link' });
             if (res && res.ok) {
                 showToast('Copied');
+            } else if (res && res.error) {
+                showToast(res.error);
             } else {
                 showToast('Error occurred');
             }
