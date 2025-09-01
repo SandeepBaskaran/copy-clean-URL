@@ -1,7 +1,11 @@
 // Handle keyboard shortcut command to copy clean link(s)
 chrome.commands.onCommand.addListener(async (command) => {
     if (command === 'copy_clean_link') {
-        await handleCopyRequest();
+        try {
+            await handleCopyRequest();
+        } catch (error) {
+            console.error('Command execution failed:', error);
+        }
     }
 });
 
@@ -14,19 +18,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function handleCopyRequest() {
-    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!activeTab) {
-        return;
-    }
+    try {
+        const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!activeTab) {
+            console.error('No active tab found');
+            return;
+        }
 
     const { cleanUrlEnabled, applyScope } = await chrome.storage.sync.get(['cleanUrlEnabled', 'applyScope']);
     const shouldClean = cleanUrlEnabled !== false; // default true
     const scope = applyScope || 'thisTab';
 
-    const tabsToProcess = await collectTabsByScope(scope, activeTab);
-    if (!tabsToProcess || tabsToProcess.length === 0) {
-        return;
-    }
+            const tabsToProcess = await collectTabsByScope(scope, activeTab);
+        if (!tabsToProcess || tabsToProcess.length === 0) {
+            console.error('No tabs to process');
+            return;
+        }
 
     const urls = tabsToProcess.map((t) => {
         const url = t.url || '';
@@ -37,6 +44,9 @@ async function handleCopyRequest() {
     if (textBlob.length > 0) {
         await copyToClipboard(textBlob);
     }
+    } catch (error) {
+        console.error('Error in handleCopyRequest:', error);
+    }
 }
 
 async function collectTabsByScope(scope, activeTab) {
@@ -45,10 +55,19 @@ async function collectTabsByScope(scope, activeTab) {
             return [activeTab];
         }
         case 'thisGroup': {
-            const groupId = typeof activeTab.groupId === 'number' ? activeTab.groupId : chrome.tabGroups ? activeTab.groupId : -1;
-            if (groupId === -1) return [activeTab];
-            const tabs = await chrome.tabs.query({ groupId });
-            return tabs || [];
+            // Check if tabGroups API is available and groupId is valid
+            if (typeof chrome.tabGroups !== 'undefined' && activeTab.groupId && activeTab.groupId !== chrome.tabs.TAB_ID_NONE) {
+                try {
+                    const tabs = await chrome.tabs.query({ groupId: activeTab.groupId });
+                    return tabs || [];
+                } catch (error) {
+                    // Fallback to active tab if group query fails
+                    return [activeTab];
+                }
+            } else {
+                // Fallback to active tab if groups not available
+                return [activeTab];
+            }
         }
         case 'thisWindow': {
             const tabs = await chrome.tabs.query({ windowId: activeTab.windowId });
@@ -84,12 +103,28 @@ async function copyToClipboard(text) {
             await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
                 func: (textToCopy) => {
-                    const textArea = document.createElement('textarea');
-                    textArea.value = textToCopy;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
+                    try {
+                        const textArea = document.createElement('textarea');
+                        textArea.value = textToCopy;
+                        textArea.style.position = 'fixed';
+                        textArea.style.left = '-999999px';
+                        textArea.style.top = '-999999px';
+                        textArea.style.opacity = '0';
+                        textArea.style.pointerEvents = 'none';
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        const successful = document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        
+                        if (successful) {
+                            console.log('execCommand copy successful');
+                        } else {
+                            console.error('execCommand copy failed');
+                        }
+                    } catch (error) {
+                        console.error('Error in content script copy:', error);
+                    }
                 },
                 args: [text]
             });

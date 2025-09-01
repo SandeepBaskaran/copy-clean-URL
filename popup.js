@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const scope = result.applyScope || 'thisTab';
         const radioToCheck = scopeRadios.find(r => r.value === scope);
         if (radioToCheck) radioToCheck.checked = true;
-        updateCtaText();
+        
+        // Ensure DOM is ready before updating CTA text
+        setTimeout(() => updateCtaText(), 0);
     });
 
     // Clean URL toggle change handler
@@ -77,10 +79,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // No local keyboard shortcut; use extension command instead
 
     function updateCtaText() {
-        const scope = (scopeRadios.find(r => r.checked) || { value: 'thisTab' }).value;
-        const isClean = !!cleanUrlToggle.checked;
-        const base = isClean ? 'Copy Clean' : 'Copy';
-        const plural = scope === 'thisTab' ? ' Link' : ' Links';
-        activateButton.textContent = base + plural;
+        try {
+            const scope = (scopeRadios.find(r => r.checked) || { value: 'thisTab' }).value;
+            const isClean = !!cleanUrlToggle.checked;
+            const base = isClean ? 'Copy Clean' : 'Copy';
+            const plural = scope === 'thisTab' ? ' Link' : ' Links';
+            const newText = base + plural;
+            
+            if (activateButton) {
+                activateButton.textContent = newText;
+            }
+        } catch (error) {
+            // Fallback to default text if update fails
+            if (activateButton) {
+                activateButton.textContent = 'Copy Clean Link';
+            }
+        }
     }
 });

@@ -8,8 +8,10 @@
     "clipboardWrite",
     "storage",
     "scripting",
-    "tabs",
-    "tabGroups"
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -24,7 +26,7 @@
         "default": "Ctrl+Shift+L",
         "mac": "Command+Shift+L"
       },
-      "description": "Copy Clean Link"
+      "description": "Copy Clean URL"
     }
   },
   "icons": {
