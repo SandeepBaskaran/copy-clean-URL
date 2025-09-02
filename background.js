@@ -59,8 +59,8 @@ async function collectTabsByScope(scope, activeTab) {
             return [activeTab];
         }
         case 'thisGroup': {
-            // Check if tabGroups API is available and groupId is valid
-            if (typeof chrome.tabGroups !== 'undefined' && activeTab.groupId && activeTab.groupId !== chrome.tabs.TAB_ID_NONE) {
+            // Check if tab is in a group
+            if (activeTab.groupId && activeTab.groupId !== chrome.tabs.TAB_ID_NONE) {
                 try {
                     const tabs = await chrome.tabs.query({ groupId: activeTab.groupId });
                     return tabs || [];
@@ -69,7 +69,7 @@ async function collectTabsByScope(scope, activeTab) {
                     return [activeTab];
                 }
             } else {
-                // Fallback to active tab if groups not available
+                // Tab is not in a group, return just this tab
                 return [activeTab];
             }
         }
