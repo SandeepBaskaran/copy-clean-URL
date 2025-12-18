@@ -63,7 +63,7 @@ Bulk import and manage URLs with intelligent extraction:
    - Select the `copy-clean-url` folder
 
 ### Option 2: Chrome Web Store (Coming Soon)
-This extension will be available on the Chrome Web Store soon.
+https://chromewebstore.google.com/detail/copy-clean-url/akfbdjbkancpbebcofcfibmfoaoigmbn
 
 ## 🚀 Usage
 
@@ -249,7 +249,6 @@ To modify this behavior, edit the `cleanUrl()` function in `popup.js` or `backgr
 - [ ] Custom URL cleaning rules
 - [ ] Bookmark integration
 - [ ] History of copied URLs
-- [ ] Chrome Web Store publication
 
 ## 🤝 Contributing
 
