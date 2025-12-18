@@ -8,41 +8,69 @@
 </head>
 <body>
     <div class="container">
-        <!-- Toggle Switches -->
-        <div class="toggle-section">
-            <div class="toggle-item">
-                <span class="toggle-text">Clean URL</span>
-                <label class="toggle-label">
-                    <input type="checkbox" id="cleanUrlToggle" checked>
-                    <span class="toggle-slider"></span>
-                </label>
+        <div class="tabs">
+            <button class="tab-button active" data-tab="export">Export</button>
+            <button class="tab-button" data-tab="import">Import</button>
+        </div>
+
+        <div id="export-tab" class="tab-content active">
+            <!-- Toggle Switches -->
+            <div class="toggle-section">
+                <div class="toggle-item">
+                    <span class="toggle-text">Clean URL</span>
+                    <label class="toggle-label">
+                        <input type="checkbox" id="cleanUrlToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Apply scope radios -->
+            <div class="radio-section">
+                <div class="radio-label">Apply for</div>
+                <label class="radio-item"><input type="radio" name="applyScope" value="thisTab" checked> this tab</label>
+                <label class="radio-item"><input type="radio" name="applyScope" value="selectedTabs"> selected tabs</label>
+                <label class="radio-item"><input type="radio" name="applyScope" value="thisGroup"> all tabs in this group</label>
+                <label class="radio-item"><input type="radio" name="applyScope" value="thisWindow"> all tabs in this window</label>
+                <label class="radio-item"><input type="radio" name="applyScope" value="allWindows"> all tabs in all windows</label>
+                <label class="radio-item"><input type="radio" name="applyScope" value="allLinksInPage"> all links in this page</label>
+            </div>
+            
+            <!-- Preview Area -->
+            <div id="previewArea" class="preview-area hidden">
+                <textarea id="previewText" readonly></textarea>
+            </div>
+
+            <!-- Action Buttons for Export -->
+            <div class="button-group">
+                <button id="previewButton" class="secondary-button">Preview URLs</button>
+                <button id="activateButton" class="activate-button">Copy Clean Link</button>
             </div>
         </div>
 
-        <!-- Apply scope radios -->
-        <div class="radio-section">
-            <div class="radio-label">Apply for</div>
-            <label class="radio-item"><input type="radio" name="applyScope" value="thisTab" checked> this tab</label>
-            <label class="radio-item"><input type="radio" name="applyScope" value="thisGroup"> all tabs in this group</label>
-            <label class="radio-item"><input type="radio" name="applyScope" value="thisWindow"> all tabs in this window</label>
-            <label class="radio-item"><input type="radio" name="applyScope" value="allWindows"> all tabs in all windows</label>
-        </div>
+        <div id="import-tab" class="tab-content">
+            <div class="import-section">
+                <label for="importUrls" class="import-label">Paste URLs to Import:</label>
+                <textarea id="importUrls" class="import-textarea" placeholder="Paste your links here..."></textarea>
+            </div>
 
-        <!-- Copy Button -->
-        <button id="activateButton" class="activate-button">
-            Copy Clean Link
-        </button>
+            <!-- Import Options -->
+            <div class="import-options">
+                <label class="checkbox-item">
+                    <input type="checkbox" id="openInNewGroup"> Open in new Group
+                </label>
+            </div>
+
+            <!-- Action Buttons for Import -->
+            <div class="button-group">
+                <button id="cleanAndCopyImportButton" class="secondary-button">Clean & Copy</button>
+                <button id="openAllImportButton" class="activate-button">Open Tabs</button>
+            </div>
+        </div>
 
         <!-- Toast Notification -->
         <div id="toast" class="toast hidden">
             <span id="toastMessage"></span>
-        </div>
-
-        <!-- Footer Attribution -->
-        <div class="footer">
-            <a href="https://www.linkedin.com/in/sandeepbaskaran" target="_blank" class="attribution">
-                Vibe coded by Sandeep Baskaran
-            </a>
         </div>
     </div>
 
