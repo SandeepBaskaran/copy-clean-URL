@@ -1,157 +1,257 @@
-// Handle keyboard shortcut command to copy clean link(s)
-chrome.commands.onCommand.addListener(async (command) => {
-    if (command === 'copy_clean_link') {
-        try {
-            await handleCopyRequest();
-        } catch (error) {
-            console.error('Command execution failed:', error);
-        }
-    }
-});
+// =================================================================
+// Core Logic: Cleaning, Scraping, and URL Collection
+// =================================================================
 
-// Also handle requests coming from popup button
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message && message.type === 'copy_clean_link') {
-        handleCopyRequest().then(() => sendResponse({ ok: true })).catch((err) => sendResponse({ ok: false, error: String(err) }));
-        return true; // keep the channel open for async response
-    }
-});
-
-async function handleCopyRequest() {
-    try {
-        const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (!activeTab) {
-            console.error('No active tab found');
-            return;
-        }
-
-    const { cleanUrlEnabled, applyScope } = await chrome.storage.sync.get(['cleanUrlEnabled', 'applyScope']);
-    const shouldClean = cleanUrlEnabled !== false; // default true
-    const scope = applyScope || 'thisTab';
-
-            const tabsToProcess = await collectTabsByScope(scope, activeTab);
-        if (!tabsToProcess || tabsToProcess.length === 0) {
-            console.error('No tabs to process');
-            return;
-        }
-
-    const urls = tabsToProcess.map((t) => {
-        const url = t.url || '';
-        return shouldClean ? cleanUrl(url) : url;
-    }).filter((u) => !!u);
-
-            const textBlob = urls.join('\n');
-        if (textBlob.length > 0) {
-            const copyResult = await copyToClipboard(textBlob);
-            if (copyResult && copyResult.error) {
-                throw new Error(copyResult.error);
-            }
-        }
-    } catch (error) {
-        console.error('Error in handleCopyRequest:', error);
-        throw error;
-    }
-}
-
-async function collectTabsByScope(scope, activeTab) {
-    switch (scope) {
-        case 'thisTab': {
-            return [activeTab];
-        }
-        case 'thisGroup': {
-            // Check if tab is in a group
-            if (activeTab.groupId && activeTab.groupId !== chrome.tabs.TAB_ID_NONE) {
-                try {
-                    const tabs = await chrome.tabs.query({ groupId: activeTab.groupId });
-                    return tabs || [];
-                } catch (error) {
-                    // Fallback to active tab if group query fails
-                    return [activeTab];
-                }
-            } else {
-                // Tab is not in a group, return just this tab
-                return [activeTab];
-            }
-        }
-        case 'thisWindow': {
-            const tabs = await chrome.tabs.query({ windowId: activeTab.windowId });
-            return tabs || [];
-        }
-        case 'allWindows': {
-            const tabs = await chrome.tabs.query({});
-            return tabs || [];
-        }
-        default:
-            return [activeTab];
-    }
-}
-
-// Clean URL function - strips everything from '?' onwards
+// Function to clean a URL by stripping query parameters and hash
 function cleanUrl(url) {
     try {
         const urlObj = new URL(url);
         return urlObj.origin + urlObj.pathname;
     } catch (error) {
-        // Fallback for invalid URLs
         const questionMarkIndex = url.indexOf('?');
-        return questionMarkIndex !== -1 ? url.substring(0, questionMarkIndex) : url;
+        if (questionMarkIndex !== -1) {
+            return url.substring(0, questionMarkIndex);
+        }
+        const hashIndex = url.indexOf('#');
+        if (hashIndex !== -1) {
+            return url.substring(0, hashIndex);
+        }
+        return url;
     }
 }
 
-// Copy to clipboard function (background script version)
-async function copyToClipboard(text) {
-    try {
-        // In MV3 service workers, use injection approach
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab) {
-            // Check if the tab URL is restricted (can't be scripted)
-            if (tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:'))) {
-                // For restricted pages, try to use clipboard API directly
-                try {
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        await navigator.clipboard.writeText(text);
-                        return;
-                    }
-                } catch (clipboardError) {
-                    console.log('Clipboard API not available on restricted page');
+// Function to get URLs based on the selected scope from the popup
+async function getUrlsForScope(scope, shouldClean) {
+    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!activeTab) {
+        return { urls: [], error: 'No active tab found.' };
+    }
+
+    let itemsToProcess = [];
+    if (scope === 'allLinksInPage') {
+        // Special case: Scrape links from the page
+        if (activeTab && activeTab.id) {
+            try {
+                const results = await chrome.scripting.executeScript({
+                    target: { tabId: activeTab.id },
+                    function: () => Array.from(document.querySelectorAll('a')).map(a => a.href),
+                });
+                if (results && results[0] && results[0].result) {
+                    itemsToProcess = results[0].result.map(url => ({ url }));
                 }
-                
-                // If clipboard API fails, show user-friendly error
-                console.log('Cannot copy from restricted page. Please try on a regular webpage.');
-                return { error: 'Cannot copy from this page. Please try on a regular webpage.' };
+            } catch (e) {
+                console.error("Failed to scrape links:", e);
+                return { urls: [], error: 'Cannot scrape links from this page.' };
             }
-            
-            // For regular pages, use script injection
-            await chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                func: (textToCopy) => {
+        }
+    } else {
+        // Standard cases: Query tabs based on scope
+        let queryOptions = {};
+        switch (scope) {
+            case 'thisTab':
+                itemsToProcess = [activeTab];
+                break;
+            case 'selectedTabs':
+                queryOptions = { highlighted: true, currentWindow: true };
+                break;
+            case 'thisGroup':
+                if (activeTab.groupId && activeTab.groupId !== chrome.tabs.TAB_ID_NONE) {
+                    queryOptions = { groupId: activeTab.groupId };
+                } else {
+                    return { urls: shouldClean ? [cleanUrl(activeTab.url)] : [activeTab.url], error: null };
+                }
+                break;
+            case 'thisWindow':
+                queryOptions = { windowId: activeTab.windowId };
+                break;
+            case 'allWindows':
+                queryOptions = {};
+                break;
+            default:
+                itemsToProcess = [activeTab];
+                break;
+        }
+        if (Object.keys(queryOptions).length > 0) {
+            itemsToProcess = await chrome.tabs.query(queryOptions);
+        }
+    }
+
+    let processedUrls = itemsToProcess.map(item => (item.url ? (shouldClean ? cleanUrl(item.url) : item.url) : ''));
+    
+    // Remove duplicates and filter out empty/invalid entries
+    const uniqueUrls = [...new Set(processedUrls)].filter(url => url && url.startsWith('http'));
+    
+    return { urls: uniqueUrls, error: null };
+}
+
+// =================================================================
+// Clipboard and Tab Management
+// =================================================================
+
+// Function to copy text to clipboard using content script injection
+async function copyToClipboard(text, tabId) {
+    try {
+        await chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            function: async (textToCopy) => {
+                // Ensure text has proper line breaks preserved
+                // Try modern Clipboard API with explicit MIME type first
+                try {
+                    // Use ClipboardItem with explicit text/plain MIME type to preserve formatting
+                    const type = 'text/plain';
+                    const blob = new Blob([textToCopy], { type });
+                    const data = [new ClipboardItem({ [type]: blob })];
+                    await navigator.clipboard.write(data);
+                    return { success: true };
+                } catch (err) {
+                    // Fallback to simpler writeText
                     try {
+                        await navigator.clipboard.writeText(textToCopy);
+                        return { success: true };
+                    } catch (err2) {
+                        console.warn('Clipboard API failed, falling back to execCommand:', err2);
+                        // Fallback to deprecated document.execCommand('copy')
                         const textArea = document.createElement('textarea');
                         textArea.value = textToCopy;
+                        // Ensure textarea preserves whitespace and line breaks
                         textArea.style.position = 'fixed';
                         textArea.style.left = '-999999px';
-                        textArea.style.top = '-999999px';
-                        textArea.style.opacity = '0';
-                        textArea.style.pointerEvents = 'none';
+                        textArea.style.whiteSpace = 'pre'; // Preserve line breaks
                         document.body.appendChild(textArea);
                         textArea.focus();
                         textArea.select();
-                        const successful = document.execCommand('copy');
-                        document.body.removeChild(textArea);
-                        
-                        if (successful) {
-                            console.log('execCommand copy successful');
-                        } else {
-                            console.error('execCommand copy failed');
+                        try {
+                            const success = document.execCommand('copy');
+                            document.body.removeChild(textArea);
+                            return { success: success };
+                        } catch (execErr) {
+                            console.error('execCommand copy failed:', execErr);
+                            document.body.removeChild(textArea);
+                            return { success: false, error: execErr.message };
                         }
-                    } catch (error) {
-                        console.error('Error in content script copy:', error);
                     }
-                },
-                args: [text]
-            });
-        }
+                }
+            },
+            args: [text]
+        });
     } catch (error) {
         console.error('Failed to copy to clipboard:', error);
+        throw new Error('Could not copy to clipboard. The page might be restricted or another error occurred.');
     }
 }
+
+// =================================================================
+// Event Listeners: Commands, Messages, Context Menus
+// =================================================================
+
+// Handle keyboard shortcut command
+chrome.commands.onCommand.addListener(async (command) => {
+    if (command === 'copy_clean_link') {
+        const { cleanUrlEnabled, applyScope } = await chrome.storage.sync.get(['cleanUrlEnabled', 'applyScope']);
+        const { urls, error } = await getUrlsForScope(applyScope || 'thisTab', cleanUrlEnabled !== false);
+        
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        if (urls.length > 0) {
+            const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (activeTab) {
+                await copyToClipboard(urls.join('\n'), activeTab.id);
+            }
+        }
+    }
+});
+
+// Handle messages from the popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    (async () => {
+        if (message.type === 'get_urls_for_preview' || message.type === 'copy_clean_link') {
+            const { cleanUrlEnabled, applyScope } = await chrome.storage.sync.get(['cleanUrlEnabled', 'applyScope']);
+            const result = await getUrlsForScope(applyScope || 'thisTab', cleanUrlEnabled !== false);
+            
+            if (result.error) {
+                sendResponse({ ok: false, error: result.error });
+                return;
+            }
+
+            if (message.type === 'copy_clean_link') {
+                if (result.urls.length === 0) {
+                    sendResponse({ ok: false, error: 'No URLs to copy.' });
+                    return;
+                }
+                try {
+                    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                    await copyToClipboard(result.urls.join('\n'), activeTab.id);
+                    sendResponse({ ok: true });
+                } catch (e) {
+                    sendResponse({ ok: false, error: e.message });
+                }
+            } else {
+                sendResponse({ ok: true, urls: result.urls });
+            }
+        } else if (message.type === 'open_urls_in_new_tabs') {
+            const urls = message.urls;
+            if (!urls || urls.length === 0) {
+                sendResponse({ ok: false, error: 'No URLs provided.' });
+                return;
+            }
+
+            const tabIds = [];
+            for (const url of urls) {
+                const tab = await chrome.tabs.create({ url, active: false });
+                tabIds.push(tab.id);
+            }
+
+            if (message.openInNewGroup && tabIds.length > 0) {
+                const group = await chrome.tabs.group({ tabIds });
+                await chrome.tabGroups.update(group, { title: 'Imported Links' });
+            }
+            sendResponse({ ok: true });
+        } else if (message.type === 'clean_and_copy_urls') {
+             const urls = message.urls;
+            if (!urls || urls.length === 0) {
+                sendResponse({ ok: false, error: 'No URLs provided.' });
+                return;
+            }
+            const cleaned = [...new Set(urls.map(cleanUrl))].filter(Boolean);
+            if (cleaned.length > 0) {
+                 try {
+                    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                    await copyToClipboard(cleaned.join('\n'), activeTab.id);
+                    sendResponse({ ok: true });
+                } catch (e) {
+                    sendResponse({ ok: false, error: e.message });
+                }
+            } else {
+                 sendResponse({ ok: false, error: 'No valid URLs to copy.' });
+            }
+        }
+    })();
+    return true; // Keep message channel open for async response
+});
+
+
+// Context Menu Setup and Handler
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.contextMenus.create({
+        id: "copyCleanLinkContext",
+        title: "Copy Clean Link",
+        contexts: ["link", "image", "video", "audio"]
+    });
+});
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+    if (info.menuItemId === "copyCleanLinkContext") {
+        const urlToClean = info.linkUrl || info.srcUrl;
+        if (urlToClean) {
+            const cleanedUrl = cleanUrl(urlToClean);
+            try {
+                await copyToClipboard(cleanedUrl, tab.id);
+            } catch (e) {
+                console.error("Context menu copy failed:", e.message);
+            }
+        }
+    }
+});
