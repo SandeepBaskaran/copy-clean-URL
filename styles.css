@@ -1,185 +1,132 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: #ffffff;
-    color: #333333;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    width: 350px;
+    height: 500px;
+    overflow: hidden; /* Prevent scrollbars on the body */
 }
 
 .container {
-    width: 320px;
-    padding: 24px;
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    color: #333;
     display: flex;
     flex-direction: column;
-    gap: 24px;
 }
 
-/* Toggle Section */
-.toggle-section {
+.tabs {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    flex-shrink: 0;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
 }
 
-.toggle-item {
+.tab-button {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.tab-button:hover {
+    color: #007bff;
+}
+
+.tab-button.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+}
+
+.tab-content {
+    display: none;
+    flex-direction: column;
+    flex-grow: 1; /* Allow content to fill space */
+    min-height: 0; /* Necessary for flex-grow in a fixed-height container */
+}
+
+.tab-content.active {
+    display: flex;
+}
+
+.toggle-section, .radio-section, .import-options {
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.toggle-item, .radio-item, .checkbox-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    justify-content: space-between;
+    margin-bottom: 6px;
 }
 
-.toggle-text {
+.toggle-text, .radio-label, .import-label {
+    margin-right: auto;
     font-size: 14px;
-    font-weight: 500;
-    color: #333333;
-}
-
-/* Toggle Switch */
-.toggle-label {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-    cursor: pointer;
-}
-
-.toggle-label input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: 0.3s;
-    border-radius: 24px;
-}
-
-.toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: 0.3s;
-    border-radius: 50%;
-}
-
-input:checked + .toggle-slider {
-    background-color: #2196F3;
-}
-
-input:disabled + .toggle-slider {
-    background-color: #e0e0e0;
-    cursor: not-allowed;
-}
-
-input:checked + .toggle-slider:before {
-    transform: translateX(20px);
-}
-
-input:disabled + .toggle-slider:before {
-    background-color: #f5f5f5;
-}
-
-/* Activate Button */
-.activate-button {
-    background: #2196F3;
-    color: white;
-    border: none;
-    padding: 16px 24px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    width: 100%;
-}
-
-.activate-button:hover {
-    background: #1976D2;
-}
-
-.activate-button:active {
-    background: #1565C0;
-}
-
-.activate-button:disabled {
-    background: #e0e0e0;
-    color: #999;
-    cursor: not-allowed;
-}
-
-/* Toast Notification */
-.toast {
-    position: fixed;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333333;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    z-index: 1000;
-    opacity: 1;
-    transition: opacity 0.3s ease;
-}
-
-.toast.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Footer */
-.footer {
-    text-align: center;
-    margin-top: auto;
-}
-
-.attribution {
-    font-size: 11px;
-    color: #666666;
-    text-decoration: none;
-    transition: color 0.2s ease;
-}
-
-.attribution:hover {
-    color: #2196F3;
-}
-
-/* Disabled state styling */
-.toggle-item.disabled .toggle-text {
-    color: #999999;
-}
-
-/* Radio Section */
-.radio-section {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    color: #444;
 }
 
 .radio-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #333333;
+    margin-bottom: 4px;
 }
 
-.radio-item {
+/* Toggle Switch */
+.toggle-label { position: relative; display: inline-block; width: 38px; height: 22px; }
+.toggle-label input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 22px; }
+.toggle-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .toggle-slider { background-color: #007bff; }
+input:checked + .toggle-slider:before { transform: translateX(16px); }
+
+/* Radio/Checkbox */
+.radio-item input[type="radio"], .checkbox-item input[type="checkbox"] { margin-right: 10px; accent-color: #007bff; transform: scale(1.2); }
+.radio-item, .checkbox-item { font-size: 14px; color: #444; cursor: pointer; }
+
+/* Buttons */
+.button-group { display: flex; gap: 10px; margin-top: auto; padding-top: 10px; flex-shrink: 0; }
+.activate-button, .secondary-button { width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 13px; cursor: pointer; transition: background-color 0.3s ease; }
+.activate-button { background-color: #007bff; color: white; }
+.activate-button:hover { background-color: #0056b3; }
+.secondary-button { background-color: #6c757d; color: white; }
+.secondary-button:hover { background-color: #5a6268; }
+.button-group .activate-button, .button-group .secondary-button { flex: 1; margin-top: 0; }
+
+.format-button {
+    width: 100%;
+    margin-bottom: 10px; /* Space between format button and checkbox */
+    padding: 10px;
     font-size: 13px;
-    color: #333333;
+    border-radius: 5px;
+    background-color: #f0f0f0; /* Lighter background for utility */
+    color: #333;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
+
+.format-button:hover {
+    background-color: #e0e0e0;
+}
+
+/* Preview Area (Export) */
+.preview-area { margin-top: 10px; background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 5px; padding: 8px; max-height: 150px; overflow-y: auto; flex-shrink: 0; }
+.preview-area textarea { width: 100%; height: 100px; border: none; background: transparent; resize: none; font-family: monospace; font-size: 12px; color: #333; }
+.preview-area.hidden { display: none; }
+
+/* Import Tab Specifics */
+.import-section { display: flex; flex-direction: column; flex-grow: 1; min-height: 0; }
+.import-label { display: block; margin-bottom: 8px; }
+.import-textarea { width: 100%; border: 1px solid #ced4da; border-radius: 5px; padding: 10px; font-size: 14px; resize: none; flex-grow: 1; box-sizing: border-box; }
+
+/* Toast Notification */
+.toast { visibility: hidden; min-width: 150px; background-color: #333; color: #fff; text-align: center; border-radius: 5px; padding: 10px; position: fixed; z-index: 1; left: 50%; transform: translateX(-50%); bottom: 30px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); opacity: 0; transition: opacity 0.5s, visibility 0.5s; }
+.toast.hidden { visibility: hidden; opacity: 0; }
+.toast:not(.hidden) { visibility: visible; opacity: 1; }
