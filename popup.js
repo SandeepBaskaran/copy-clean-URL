@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const openAllImportButton = document.getElementById('openAllImportButton');
     const cleanAndCopyImportButton = document.getElementById('cleanAndCopyImportButton');
     const openInNewGroupCheckbox = document.getElementById('openInNewGroup');
+    const openInNewGroupText = document.getElementById('openInNewGroupText');
 
     // =================================================================
     // Initial Setup
@@ -214,6 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
             await navigator.clipboard.writeText(finalString);
             showToast('Copied!');
             importUrlsTextarea.value = '';
+            updateImportCounts();
         } catch (err) {
             console.error('Failed to copy to clipboard:', err);
             showToast('Copy failed!');
@@ -255,10 +257,26 @@ document.addEventListener('DOMContentLoaded', function() {
         if (createdTabs.length > 0) {
             showToast(`Opened ${createdTabs.length} URLs.`);
             importUrlsTextarea.value = '';
+            updateImportCounts();
         } else {
             showToast('Could not open any URLs.');
         }
     });
+
+    function updateImportCounts() {
+        const text = importUrlsTextarea.value;
+        const urls = extractUrls(text);
+        const uniqueUrls = [...new Set(urls)];
+        const count = uniqueUrls.length;
+        
+        openInNewGroupText.textContent = `Open all ${count} links in a new Group`;
+        openAllImportButton.textContent = `Open Tabs (${count})`;
+    }
+
+    importUrlsTextarea.addEventListener('input', updateImportCounts);
+
+    // Initialize import counts on load (in case browser restores value)
+    updateImportCounts();
 
     // =================================================================
     // Helper Functions
@@ -270,11 +288,19 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => toast.classList.add('hidden'), 2000);
     }
 
-    function updateCtaText() {
+    async function updateCtaText() {
         const scope = (scopeRadios.find(r => r.checked) || { value: 'thisTab' }).value;
         const isClean = cleanUrlToggle.checked;
         const base = isClean ? 'Copy Clean' : 'Copy';
         const suffix = (scope === 'thisTab') ? 'Link' : 'Links';
-        activateButton.textContent = `${base} ${suffix}`;
+        
+        try {
+            const res = await chrome.runtime.sendMessage({ type: 'get_urls_for_preview' });
+            const count = (res && res.urls) ? res.urls.length : 0;
+            activateButton.textContent = `${base} ${suffix} (${count})`;
+        } catch (e) {
+            console.error("Error updating count:", e);
+            activateButton.textContent = `${base} ${suffix}`;
+        }
     }
 });
