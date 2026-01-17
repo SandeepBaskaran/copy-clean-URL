@@ -2,7 +2,7 @@ body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     width: 350px;
-    height: 500px;
+    height: 335px; /* Fixed height to prevent jumping */
     overflow: hidden; /* Prevent scrollbars on the body */
 }
 
@@ -49,8 +49,8 @@ body {
 .tab-content {
     display: none;
     flex-direction: column;
-    flex-grow: 1; /* Allow content to fill space */
-    min-height: 0; /* Necessary for flex-grow in a fixed-height container */
+    flex-grow: 1;
+    min-height: 0;
 }
 
 .tab-content.active {
@@ -122,9 +122,9 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
 .preview-area.hidden { display: none; }
 
 /* Import Tab Specifics */
-.import-section { display: flex; flex-direction: column; flex-grow: 1; min-height: 0; }
+.import-section { display: flex; flex-direction: column; flex-grow: 1; min-height: 0; margin-bottom: 15px; }
 .import-label { display: block; margin-bottom: 8px; }
-.import-textarea { width: 100%; border: 1px solid #ced4da; border-radius: 5px; padding: 10px; font-size: 14px; resize: none; flex-grow: 1; box-sizing: border-box; }
+.import-textarea { width: 100%; border: 1px solid #ced4da; border-radius: 5px; padding: 10px; font-size: 14px; resize: none; height: 100%; box-sizing: border-box; }
 
 /* Toast Notification */
 .toast { visibility: hidden; min-width: 150px; background-color: #333; color: #fff; text-align: center; border-radius: 5px; padding: 10px; position: fixed; z-index: 1; left: 50%; transform: translateX(-50%); bottom: 30px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); opacity: 0; transition: opacity 0.5s, visibility 0.5s; }
