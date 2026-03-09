@@ -65,7 +65,7 @@ async function getUrlsForScope(scope, shouldClean) {
                 queryOptions = { windowId: activeTab.windowId };
                 break;
             case 'allWindows':
-                queryOptions = {};
+                queryOptions = { windowType: 'normal' };
                 break;
             default:
                 itemsToProcess = [activeTab];
@@ -73,6 +73,12 @@ async function getUrlsForScope(scope, shouldClean) {
         }
         if (Object.keys(queryOptions).length > 0) {
             itemsToProcess = await chrome.tabs.query(queryOptions);
+            
+            if (scope === 'allWindows') {
+                itemsToProcess = itemsToProcess.filter(tab => 
+                    tab.windowId === activeTab.windowId || !tab.incognito
+                );
+            }
         }
     }
 
