@@ -95,16 +95,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Import Tab Logic (Self-contained in popup.js)
     // =================================================================
 
-    function cleanUrl(url) {
-        try {
-            const urlObj = new URL(url);
-            return urlObj.origin + urlObj.pathname;
-        } catch (e) {
-            const qIndex = url.indexOf('?');
-            return qIndex !== -1 ? url.substring(0, qIndex) : url;
-        }
-    }
-
     function extractUrls(text) {
         if (!text) return [];
 
