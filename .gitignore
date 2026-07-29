@@ -57,3 +57,6 @@ node_modules/
 # Build outputs
 dist/
 build/
+
+# Local OpenClaw workflow data and worktrees
+/.openclaw/
