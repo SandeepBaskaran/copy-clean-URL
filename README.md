@@ -213,9 +213,11 @@ Or edit `manifest.json`:
 ```
 
 ### Clean URL Logic
-By default, the extension removes everything after `?` (query parameters) and `#` (hash fragments).
+By default, the extension removes query parameters and hash fragments. For YouTube watch
+URLs, it preserves the essential `v` parameter so different videos remain valid and distinct
+after cleaning while tracking parameters are removed.
 
-To modify this behavior, edit the `cleanUrl()` function in `popup.js` or `background.js`.
+To modify this behavior, edit the shared `cleanUrl()` function in `url-utils.js`.
 
 ## 🐛 Troubleshooting
 

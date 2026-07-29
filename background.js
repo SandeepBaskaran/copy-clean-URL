@@ -1,24 +1,8 @@
+importScripts('url-utils.js');
+
 // =================================================================
 // Core Logic: Cleaning, Scraping, and URL Collection
 // =================================================================
-
-// Function to clean a URL by stripping query parameters and hash
-function cleanUrl(url) {
-    try {
-        const urlObj = new URL(url);
-        return urlObj.origin + urlObj.pathname;
-    } catch (error) {
-        const questionMarkIndex = url.indexOf('?');
-        if (questionMarkIndex !== -1) {
-            return url.substring(0, questionMarkIndex);
-        }
-        const hashIndex = url.indexOf('#');
-        if (hashIndex !== -1) {
-            return url.substring(0, hashIndex);
-        }
-        return url;
-    }
-}
 
 // Function to get URLs based on the selected scope from the popup
 async function getUrlsForScope(scope, shouldClean) {

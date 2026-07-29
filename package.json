@@ -5,8 +5,8 @@
   "main": "manifest.json",
   "scripts": {
     "build": "echo 'No build process required for Chrome extension'",
-    "test": "echo 'No tests specified'",
-    "lint": "echo 'No linter configured'"
+    "test": "node --test",
+    "lint": "node --check background.js && node --check popup.js && node --check url-utils.js"
   },
   "keywords": [
     "chrome-extension",
